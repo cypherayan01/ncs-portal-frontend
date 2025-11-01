@@ -27,9 +27,12 @@ import {
   Building,
   GraduationCap,
   Copy,
-  Share2
+  Share2,
+  Mic
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from "react-router-dom";
+import Header from './Header';
 
 // Enhanced Types
 interface Message {
@@ -100,8 +103,9 @@ interface JobModalProps {
 }
 
 const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
+  
   if (!job) return null;
-
+  console.log(job);
   const formatSalary = (amount: number): string => {
     if (amount > 100000) {
       return `₹${(amount / 100000).toFixed(1)}L`;
@@ -126,7 +130,7 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
   };
 
   const keywordsList = job.keywords ? job.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
-
+  
   return (
     <AnimatePresence>
       {isOpen && (
@@ -167,12 +171,12 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
                         {job.districtname}, {job.statename}
                       </span>
                       
-                      {job.industryname && (
+                      {/* {job.industryname && (
                         <span className="flex items-center gap-1">
                           <Building className="h-4 w-4" />
                           {job.industryname}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
@@ -216,23 +220,24 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
                     <p className="text-xs text-blue-600">required</p>
                   </div>
                   
-                  {job.numberofopenings && (
+                   {job.industryname && (
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center border border-purple-200">
                       <Users className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                      <p className="text-sm text-purple-600 font-medium">Openings</p>
-                      <p className="text-lg font-bold text-purple-700">{job.numberofopenings}</p>
-                      <p className="text-xs text-purple-600">positions</p>
+                      <p className="text-sm text-purple-600 font-medium">Sector</p>
+                      <p className="text-lg font-bold text-purple-700">{job.industryname}</p>
+                      
                     </div>
-                  )}
+                  )} 
+                  {job.sectorname && (
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center border border-purple-200">
+                      <Users className="h-6 w-6 text-purple-600 mx-auto mb-2" />
+                      <p className="text-sm text-purple-600 font-medium">Sector</p>
+                      <p className="text-lg font-bold text-purple-700">{job.sectorname}</p>
+                      
+                    </div>
+                  )} 
                   
-                  {job.similarity_score && (
-                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 text-center border border-amber-200">
-                      <Star className="h-6 w-6 text-amber-600 mx-auto mb-2" />
-                      <p className="text-sm text-amber-600 font-medium">AI Score</p>
-                      <p className="text-lg font-bold text-amber-700">{(job.similarity_score * 100).toFixed(0)}%</p>
-                      <p className="text-xs text-amber-600">similarity</p>
-                    </div>
-                  )}
+                 
                 </div>
 
                 {/* Job Details */}
@@ -243,37 +248,12 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                       <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
                         <Briefcase className="h-5 w-5 text-indigo-600" />
-                        Role Information
+                        Job Description
                       </h3>
                       
                       <div className="space-y-3 text-sm">
-                        {job.functionalrolename && (
-                          <div>
-                            <span className="text-slate-600 font-medium">Functional Role:</span>
-                            <p className="text-slate-800 font-semibold">{job.functionalrolename}</p>
-                          </div>
-                        )}
+                        {job.description }
                         
-                        {job.functionalareaname && (
-                          <div>
-                            <span className="text-slate-600 font-medium">Functional Area:</span>
-                            <p className="text-slate-800 font-semibold">{job.functionalareaname}</p>
-                          </div>
-                        )}
-                        
-                        {job.sectorname && (
-                          <div>
-                            <span className="text-slate-600 font-medium">Sector:</span>
-                            <p className="text-slate-800 font-semibold">{job.sectorname}</p>
-                          </div>
-                        )}
-                        
-                        {job.gendercode && (
-                          <div>
-                            <span className="text-slate-600 font-medium">Gender Preference:</span>
-                            <p className="text-slate-800 font-semibold">{job.gendercode}</p>
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -364,14 +344,14 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
                 </div>
 
                 {/* Job Description */}
-                {job.description && (
+                {/* {job.description && (
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                     <h3 className="font-bold text-slate-800 mb-3">Job Description</h3>
                     <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
                       {job.description}
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -408,6 +388,7 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
 };
 
 const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
+  const apiUrl = import.meta.env.VITE_SEARCH_JOBS_URL;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -416,8 +397,51 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
   const [cvProcessed, setCvProcessed] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false); 
+  const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -433,7 +457,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
       timestamp: new Date(),
       metadata: { 
         messageType: 'text',
-        suggestions: ['Upload my CV', 'Build profile through chat', 'Tell me about available jobs']
+        suggestions: ['Upload my CV', 'Build profile through chat']
       }
     };
     setMessages([welcomeMessage]);
@@ -484,14 +508,14 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
         requestBody.cv_profile_data = userProfile;
       }
 
-      const response = await fetch(`http://localhost:8888${endpoint}`, {
+      const response = await fetch(`${apiUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
-      
+      console.log("Chat response data:", data);
       // Add bot response
       addMessage({
         type: 'bot',
@@ -562,7 +586,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
       formData.append('cv_file', file);
 
       // Use the enhanced CV upload endpoint
-      const response = await fetch('http://localhost:8888/upload_cv', {
+      const response = await fetch(`${apiUrl}/upload_cv`, {
         method: 'POST',
         body: formData
       });
@@ -844,7 +868,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed">{message.content}</p>
                 <div className="space-y-3">
-                  {message.metadata.jobs.slice(0, 3).map((job) => (
+                  {message.metadata.jobs.slice(0, 5).map((job) => (
                     <div key={job.ncspjobid} className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 space-y-3 border border-slate-200">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -898,10 +922,10 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                     </div>
                   ))}
                   
-                  {message.metadata.jobs.length > 3 && (
+                  {message.metadata.jobs.length > 5 && (
                     <div className="text-center">
                       <p className="text-xs text-slate-600">
-                        Showing 3 of {message.metadata.jobs.length} matches. Ask me to show more!
+                        Showing 5 of {message.metadata.jobs.length} matches. Ask me to show more!
                       </p>
                     </div>
                   )}
@@ -967,6 +991,30 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Listening Indicator Overlay */}
+      {isListening && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-[1999]"
+            onClick={toggleVoiceInput}
+          />
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-red-400 to-red-500 text-white p-8 rounded-2xl shadow-2xl z-[2000] text-center">
+            <div className="mb-4 animate-pulse">
+              <Mic className="h-16 w-16 mx-auto" />
+            </div>
+            <div className="text-2xl font-semibold mb-2">Listening...</div>
+            <div className="text-sm opacity-90">Speak now or click to stop</div>
+            <div className="flex justify-center items-center gap-1 mt-4">
+              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></span>
+              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.1s]"></span>
+              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.2s]"></span>
+              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.3s]"></span>
+              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.4s]"></span>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Job Details Modal */}
       <JobModal 
         job={selectedJob} 
@@ -975,7 +1023,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
       />
       
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-40">
+      {/* <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1021,8 +1069,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
             </div>
           </div>
         </div>
-      </header>
-
+      </header> */}
+      <Header />
       {/* Chat Container */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/40 overflow-hidden">
@@ -1098,7 +1146,20 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   </div>
                 )}
               </div>
-              
+              {/* Voice Input Button - Added */}
+              <button
+                onClick={toggleVoiceInput}
+                disabled={isLoading}
+                className={`p-3 rounded-xl transition-all shadow-sm border ${
+                  isListening 
+                    ? 'bg-red-500 text-white border-red-600' 
+                    : 'text-slate-500 hover:text-red-500 hover:bg-red-50 border-slate-200 hover:border-red-200'
+                }`}
+                title={isListening ? "Stop listening" : "Start voice input"}
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+
               <button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isLoading}
@@ -1183,6 +1244,14 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
           </div>
         </div>
       </div>
+      <style>
+        {`
+          @keyframes wave {
+            0%, 100% { height: 20px; }
+            50% { height: 40px; }
+          }
+        `}
+      </style>
     </div>
   );
 };

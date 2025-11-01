@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ToggleSwitch from './ToggleSwitch';
+import Header from './Header';
 
 // --- Interfaces ---
 interface CourseRecommendation {
@@ -93,6 +94,7 @@ interface OverallRecommendationsResponse {
 
 // --- Component Definition ---
 const App: React.FC = () => {
+  const apiUrl = import.meta.env.VITE_SEARCH_JOBS_URL;
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>('');
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -266,7 +268,7 @@ const App: React.FC = () => {
 
 
 
-      const response = await fetch('http://localhost:8000/recommend_courses', {
+      const response = await fetch(`${apiUrl}/recommend_courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -349,7 +351,7 @@ const App: React.FC = () => {
       
       console.log('Sending to backend:', { skills: skills, limit: 15 });
 
-      const response = await fetch('http://localhost:8000/search_jobs', {
+      const response = await fetch(`${apiUrl}/search_jobs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -448,9 +450,9 @@ const handleFileUpload = async () => {
 
   const formData = new FormData();
   formData.append("file", selectedFile);
-
+  
   try {
-    const response = await fetch("http://127.0.0.1:8000/upload", {
+    const response = await fetch(`${apiUrl}/upload`, {
       method: "POST",
       body: formData,
     });
@@ -524,28 +526,7 @@ const handleFileUpload = async () => {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Left Side - Indian emblem + Ministry logo */}
-            <div className="flex items-center space-x-4">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Ministry_of_Labour_and_Employment.png"
-                alt="Indian Emblem"
-                className="h-12 w-auto object-contain"
-              />
-            </div>
-            {/* Right Side - G20 logo */}
-            <div>
-              <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3KvIDJaZXcLi0Xf7WZICZPhxdrNwaSZtPtw&s"
-                alt="G20 Logo"
-                className="h-12 w-auto object-contain"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Search Section */}
       <div className="relative">
