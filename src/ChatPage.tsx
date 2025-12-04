@@ -4,35 +4,27 @@ import {
   Paperclip, 
   Bot, 
   User, 
-  Upload,
   FileText,
-  MessageCircle,
   Briefcase,
   MapPin,
   Clock,
   IndianRupee,
-  Star,
   ExternalLink,
   Loader2,
   X,
   Check,
   AlertCircle,
-  ArrowLeft,
-  Home,
   Zap,
   TrendingUp,
-  Award,
   BookOpen,
   Users,
-  Building,
   GraduationCap,
   Copy,
-  Share2,
-  Mic
+  Share2
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Link } from "react-router-dom";
 import Header from './Header';
+import VoiceInputButton from './components/VoiceInputButton';
 
 // Enhanced Types
 interface Message {
@@ -389,6 +381,9 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
 
 const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
   const apiUrl = import.meta.env.VITE_SEARCH_JOBS_URL;
+  const bhasiniApiKey = import.meta.env.VITE_BHASINI_API_KEY;
+  const bhasiniUserId = import.meta.env.VITE_BHASINI_USER_ID;
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -397,49 +392,27 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
   const [cvProcessed, setCvProcessed] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isListening, setIsListening] = useState(false); 
-  const recognitionRef = useRef<any>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  // Initialize speech recognition
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputValue(transcript);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-  }, []);
-
-  const toggleVoiceInput = () => {
-    if (!recognitionRef.current) {
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
-      setIsListening(true);
+  // Handle voice input from the new VoiceInputButton component
+  const handleVoiceTranscript = (text: string, metadata?: {
+    originalText?: string;
+    translatedText?: string;
+    detectedLanguage?: string;
+    isTranslated?: boolean;
+  }) => {
+    setInputValue(text);
+    
+    // If we have translation metadata, we could show it to the user
+    if (metadata && metadata.isTranslated) {
+      console.log('Voice input processed:', {
+        original: metadata.originalText,
+        translated: metadata.translatedText,
+        language: metadata.detectedLanguage
+      });
     }
   };
 
@@ -991,30 +964,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Listening Indicator Overlay */}
-      {isListening && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black/50 z-[1999]"
-            onClick={toggleVoiceInput}
-          />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-red-400 to-red-500 text-white p-8 rounded-2xl shadow-2xl z-[2000] text-center">
-            <div className="mb-4 animate-pulse">
-              <Mic className="h-16 w-16 mx-auto" />
-            </div>
-            <div className="text-2xl font-semibold mb-2">Listening...</div>
-            <div className="text-sm opacity-90">Speak now or click to stop</div>
-            <div className="flex justify-center items-center gap-1 mt-4">
-              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite]"></span>
-              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.1s]"></span>
-              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.2s]"></span>
-              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.3s]"></span>
-              <span className="w-1 h-5 bg-white rounded-full animate-[wave_1s_ease-in-out_infinite_0.4s]"></span>
-            </div>
-          </div>
-        </>
-      )}
-
       {/* Job Details Modal */}
       <JobModal 
         job={selectedJob} 
@@ -1146,19 +1095,15 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   </div>
                 )}
               </div>
-              {/* Voice Input Button - Added */}
-              <button
-                onClick={toggleVoiceInput}
+              {/* Enhanced Voice Input Button with Bhasini API */}
+              <VoiceInputButton
+                onTranscript={handleVoiceTranscript}
                 disabled={isLoading}
-                className={`p-3 rounded-xl transition-all shadow-sm border ${
-                  isListening 
-                    ? 'bg-red-500 text-white border-red-600' 
-                    : 'text-slate-500 hover:text-red-500 hover:bg-red-50 border-slate-200 hover:border-red-200'
-                }`}
-                title={isListening ? "Stop listening" : "Start voice input"}
-              >
-                <Mic className="h-5 w-5" />
-              </button>
+                bhasiniApiKey={bhasiniApiKey}
+                bhasiniUserId={bhasiniUserId}
+                showLanguageSelector={true}
+                defaultLanguage="hi"
+              />
 
               <button
                 onClick={handleSendMessage}
