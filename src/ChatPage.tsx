@@ -256,8 +256,9 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
                       </h3>
                       
                       <div className="space-y-3 text-sm">
-                        {job.description }
-                        
+                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                          {job.description || "No detailed job description available."}
+                        </p>
                       </div>
                     </div>
 
@@ -723,12 +724,39 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    // Handle special suggestions differently
+    if (suggestion === 'Upload my CV') {
+      triggerFileUpload();
+      return;
+    }
+    
+    if (suggestion === 'Build profile through chat') {
+      // Set up for conversational profile building
+      setChatPhase('profile_building');
+      setInputValue('');
+      
+      addMessage({
+        type: 'user',
+        content: 'Build profile through chat',
+        metadata: { messageType: 'text' }
+      });
+
+      addMessage({
+        type: 'bot',
+        content: "Great! I'll help you build your profile step by step. Let's start with your skills. What technologies, programming languages, or job skills do you have? For example: 'I know Python, JavaScript, and SQL' or 'I have experience in data entry and customer service'.",
+        metadata: { 
+          messageType: 'text',
+          suggestions: ['I know Python and JavaScript', 'I have data entry skills', 'I am a graphic designer', 'I work in customer service']
+        }
+      });
+      return;
+    }
+    
+    // For other suggestions, use the default behavior
     setInputValue(suggestion);
     // Auto-send the suggestion
     setTimeout(() => {
-      if (inputValue === suggestion) {
-        handleSendMessage();
-      }
+      handleSendMessage();
     }, 100);
   };
 
@@ -790,8 +818,16 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                       <button
                         key={idx}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-medium transition-colors border border-indigo-200"
+                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors border ${
+                          suggestion === 'Upload my CV' 
+                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'
+                            : suggestion === 'Build profile through chat'
+                            ? 'bg-purple-50 hover:bg-purple-100 text-purple-600 border-purple-200'
+                            : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200'
+                        }`}
                       >
+                        {suggestion === 'Upload my CV' && '📄 '}
+                        {suggestion === 'Build profile through chat' && '💬 '}
                         {suggestion}
                       </button>
                     ))}
