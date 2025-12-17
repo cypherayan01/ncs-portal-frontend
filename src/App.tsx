@@ -371,6 +371,67 @@ const handleClearAllFilters = () => {
     return unmatchedSkills;
   };
 
+  // NEW: Function to fetch skill-specific course recommendations (appends to existing)
+  const fetchSkillSpecificRecommendations = async (skills: string[]) => {
+    setLoadingRecommendations(true);
+    try {
+      console.log('Fetching skill-specific recommendations for:', skills);
+
+      const response = await fetch(`${apiUrl}/recommend_course`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          keywords_unmatched: skills
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: OverallRecommendationsResponse = await response.json();
+      console.log('Received skill-specific recommendations:', data);
+      
+      // Append to existing recommendations instead of replacing
+      setOverallRecommendations(prev => {
+        const existingCourses = prev.map(course => course.course_name);
+        const newCourses = (data.recommendations || []).filter(course => 
+          !existingCourses.includes(course.course_name)
+        );
+        return [...prev, ...newCourses];
+      });
+      
+    } catch (err) {
+      console.error('Error fetching skill-specific recommendations:', err);
+      
+      // Mock data for demo - also append instead of replace
+      const mockRecommendations: CourseRecommendation[] = [
+        {
+          course_name: `${skills[0]} Masterclass`,
+          platform: "Udemy",
+          duration: "25 hours",
+          link: "https://www.udemy.com/course/example/",
+          educator: "Expert Instructor",
+          skill_covered: skills[0],
+          difficulty_level: "Intermediate",
+          rating: "4.5/5"
+        }
+      ];
+      
+      setOverallRecommendations(prev => {
+        const existingCourses = prev.map(course => course.course_name);
+        const newCourses = mockRecommendations.filter(course => 
+          !existingCourses.includes(course.course_name)
+        );
+        return [...prev, ...newCourses];
+      });
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
   // NEW: Function to fetch overall course recommendations
   const fetchOverallRecommendations = async (unmatchedSkills: string[]) => {
     setLoadingRecommendations(true);
@@ -387,7 +448,7 @@ const handleClearAllFilters = () => {
 
 
 
-      const response = await fetch(`${apiUrl}/recommend_courses`, {
+      const response = await fetch(`${apiUrl}/recommend_course`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -541,7 +602,7 @@ const handleClearAllFilters = () => {
       newExpanded.add(skill);
       // Fetch recommendations for this specific skill if not already loaded
       if (!overallRecommendations.some(rec => rec.skill_covered.toLowerCase().includes(skill.toLowerCase()))) {
-        await fetchOverallRecommendations([skill]);
+        await fetchSkillSpecificRecommendations([skill]);
       }
     }
     setExpandedSkills(newExpanded);

@@ -33,13 +33,14 @@ interface Message {
   content: string;
   timestamp: Date;
   metadata?: {
-    messageType?: 'text' | 'cv_upload' | 'job_results' | 'profile_summary' | 'cv_results' | 'recommendations';
+    messageType?: 'text' | 'cv_upload' | 'job_results' | 'profile_summary' | 'cv_results' | 'recommendations' | 'course_recommendations';
     jobs?: Job[];
     profileData?: UserProfile;
     uploadStatus?: 'uploading' | 'processing' | 'complete' | 'error';
     fileName?: string;
     suggestions?: string[];
     recommendations?: string[];
+    courses?: Course[];
     processingTime?: number;
     confidenceScore?: number;
   };
@@ -81,6 +82,17 @@ interface Job {
   skills_matched?: string[];
   similarity_score?: number;
   date?: string;
+}
+
+interface Course {
+  course_name: string;
+  platform: string;
+  duration: string;
+  link: string;
+  educator: string;
+  skill_covered: string;
+  difficulty_level?: string;
+  rating?: string;
 }
 
 interface ChatPageProps {
@@ -450,6 +462,69 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
     setIsModalOpen(true);
   };
 
+  const handleCourseRecommendation = async (jobs: Job[], userSkills: string[]) => {
+    try {
+      // Add loading message for course recommendations
+      addMessage({
+        type: 'bot',
+        content: "🔍 Analyzing job requirements to find skill gaps and recommend relevant courses...",
+        metadata: { messageType: 'text' }
+      });
+
+      setIsLoading(true);
+
+      const response = await fetch(`${apiUrl}/recommend_courses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_skills: userSkills,
+          job_results: jobs.map(job => ({
+            ncspjobid: job.ncspjobid,
+            title: job.title,
+            keywords: job.keywords,
+            description: job.description,
+            match_percentage: job.match_percentage
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Course recommendation API error:', response.status, errorData);
+        throw new Error(`API Error ${response.status}: ${JSON.stringify(errorData)}`);
+      }
+
+      const data = await response.json();
+
+      if (data.recommendations && data.recommendations.length > 0) {
+        addMessage({
+          type: 'bot',
+          content: `📚 Based on the job requirements, I found ${data.recommendations.length} relevant courses to enhance your skills:`,
+          metadata: {
+            messageType: 'course_recommendations',
+            courses: data.recommendations,
+            suggestions: ['Find more courses', 'Show skill gap analysis', 'Search specific skills']
+          }
+        });
+      } else {
+        addMessage({
+          type: 'bot',
+          content: "👍 Great! Your current skills match well with the available jobs. No additional courses needed at this time.",
+          metadata: { messageType: 'text' }
+        });
+      }
+    } catch (error) {
+      console.error('Course recommendation error:', error);
+      addMessage({
+        type: 'bot',
+        content: "I encountered an issue while finding course recommendations. You can ask me manually for specific skill courses.",
+        metadata: { messageType: 'text' }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -598,6 +673,11 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
               suggestions: ['Show more jobs', 'Refine my search', 'Add more skills', 'Search by location']
             }
           });
+
+          // Automatically get course recommendations based on job results
+          setTimeout(() => {
+            handleCourseRecommendation(data.jobs, profile.skills || []);
+          }, 2000);
         }
 
         // Add recommendations if available
@@ -952,6 +1032,70 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                 )}
               </div>
             )}
+
+            {/* Course Recommendations */}
+            {message.metadata?.messageType === 'course_recommendations' && message.metadata.courses && (
+              <div className="space-y-4">
+                <p className="text-sm leading-relaxed">{message.content}</p>
+                <div className="space-y-3">
+                  {message.metadata.courses.map((course: Course, idx: number) => (
+                    <div key={idx} className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 space-y-3 border border-green-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-slate-800 text-lg">{course.course_name}</h4>
+                          <p className="text-green-600 font-medium">{course.platform}</p>
+                          <p className="text-slate-600 text-sm">by {course.educator}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium mb-1">
+                            {course.skill_covered}
+                          </div>
+                          {course.rating && (
+                            <div className="text-yellow-600 text-sm">★ {course.rating}</div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-xs text-slate-600">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {course.duration}
+                        </span>
+                        {course.difficulty_level && (
+                          <span className="flex items-center gap-1">
+                            <GraduationCap className="h-3 w-3" />
+                            {course.difficulty_level}
+                          </span>
+                        )}
+                      </div>
+
+                      <button 
+                        onClick={() => window.open(course.link, '_blank')}
+                        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        View Course
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action Suggestions */}
+                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {message.metadata.suggestions.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="bg-green-50 hover:bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-medium transition-colors border border-green-200"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <p className="text-xs text-slate-500 mt-2 px-2">
@@ -1169,11 +1313,21 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   </button>
                   
                   <button
-                    onClick={() => handleSuggestionClick('Recommend courses')}
+                    onClick={() => {
+                      if (userProfile?.skills) {
+                        // Get last job results from messages
+                        const lastJobMessage = messages.find(m => m.metadata?.messageType === 'job_results');
+                        if (lastJobMessage?.metadata?.jobs) {
+                          handleCourseRecommendation(lastJobMessage.metadata.jobs, userProfile.skills);
+                        } else {
+                          handleSuggestionClick('Recommend courses for my skills');
+                        }
+                      }
+                    }}
                     className="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-emerald-200 flex items-center gap-1"
                   >
                     <BookOpen className="h-3 w-3" />
-                    Courses
+                    Get Courses
                   </button>
                   
                   <button
