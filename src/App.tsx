@@ -466,7 +466,7 @@ const handleClearAllFilters = () => {
       console.log('Received overall recommendations:', data);
       
       setOverallRecommendations(data.recommendations || []);
-      setSkillsWithRecommendations(data.keywords_processed || []);
+      setSkillsWithRecommendations((data.keywords_processed || []).filter(skill => skill !== "NA"));
       setShowOverallRecommendations(true);
       
     } catch (err) {
@@ -1348,7 +1348,7 @@ const FilterChips: React.FC<{
                       </button>
                     </div>
                     
-                    <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl p-4">
+                    {/* <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl p-4">
                       <p className="text-purple-800 text-sm font-medium mb-2">
                         💡 Learning this skill could increase your job matches by up to {getBoostPercentage(skill)}%
                       </p>
@@ -1356,7 +1356,7 @@ const FilterChips: React.FC<{
                         <Star className="h-3 w-3" />
                         <span>Highly sought after by employers</span>
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* Expandable course recommendations for this skill */}
                     <AnimatePresence>
