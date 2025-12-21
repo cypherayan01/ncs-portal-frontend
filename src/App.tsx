@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   Search, 
   MapPin, 
@@ -35,6 +35,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ToggleSwitch from './ToggleSwitch';
 import ChatPage from './ChatPage';
 import Header from './Header';
+import { useSearchSuggestions } from './hooks/useSearchSuggestions';
 
 
 //New Interfaces added 
@@ -128,12 +129,18 @@ interface OverallRecommendationsResponse {
 const App: React.FC = () => {
 
   const apiUrl = import.meta.env.VITE_SEARCH_JOBS_URL;
+  const searchEndpoint = import.meta.env.VITE_SEARCH_ENDPOINT || 'search_jobs';
   const [currentView, setCurrentView] = useState<'home' | 'chat'>('home');
 
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>('');
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const inputRef = useRef<HTMLDivElement>(null);
+
+  // Use the search suggestions hook
+  const { suggestions, loading: suggestionsLoading, fetchSuggestions } = useSearchSuggestions({
+    apiUrl
+  });
 
   const [jobs, setJobs] = useState<ProcessedJob[]>([]);
   const [expandedJobs, setExpandedJobs] = useState<Set<string>>(new Set());
@@ -260,18 +267,26 @@ const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     return (positiveHash % 21) + 20;
 };
 
-  const suggestions = useMemo(() => {
-    if (!inputValue) return allSkills.slice(0, 8);
-    return allSkills.filter(skill =>
-      skill.toLowerCase().includes(inputValue.toLowerCase()) && !selectedSkills.includes(skill)
-    ).slice(0, 8);
-  }, [inputValue, allSkills, selectedSkills]);
+  // Debounced input effect for API suggestions - only when user types (2+ chars)
+  useEffect(() => {
+    if (inputValue.trim().length < 2) {
+      // Don't show suggestions for empty or very short input
+      return;
+    }
+    
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(inputValue);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [inputValue, fetchSuggestions]);
 
   const addSkill = (skill: string) => {
     if (skill && !selectedSkills.includes(skill)) {
       setSelectedSkills([...selectedSkills, skill]);
       setInputValue('');
       setShowSuggestions(false);
+      // Clear suggestions immediately when skill is added
     }
   };
   const switchToChat = () => {
@@ -437,13 +452,11 @@ const handleClearAllFilters = () => {
     setLoadingRecommendations(true);
     try {
       console.log('Fetching recommendations for unmatched skills:', unmatchedSkills);
-      console.log('skills:',selectedSkills);
-      console.log('skills pool:',skills_pool);
-      const result=skills_pool.filter(skill => !selectedSkills.includes(skill));
+      console.log('skills:', selectedSkills);
       
-      //const randomThree = result.sort(() => Math.random() - 0.5).slice(0, 4);
+      // Use dynamic unmatched skills instead of hardcoded pool
       const randomThree = unmatchedSkills.sort(() => Math.random() - 0.5).slice(0, 4);
-      console.log(randomThree);
+      console.log('Selected skills for recommendations:', randomThree);
       
 
 
@@ -531,7 +544,7 @@ const handleClearAllFilters = () => {
       
       console.log('Sending to backend:', { skills: skills, limit: 15 });
 
-      const response = await fetch(`${apiUrl}/search_jobs`, {
+      const response = await fetch(`${apiUrl}/${searchEndpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -941,9 +954,9 @@ const FilterChips: React.FC<{
                     className="w-full px-2 py-1 text-lg bg-transparent border-0 focus:ring-0 focus:outline-none placeholder-slate-500"
                     disabled={loading}
                   />
-                  {/* Autocomplete suggestions */}
+                  {/* Autocomplete suggestions - only show when user has typed 2+ chars */}
                   <AnimatePresence>
-                    {showSuggestions && suggestions.length > 0 && (
+                    {showSuggestions && suggestions.length > 0 && inputValue.trim().length >= 2 && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1084,12 +1097,7 @@ const FilterChips: React.FC<{
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h4 className="text-2xl font-bold text-slate-900">{job.title}</h4>
-                          <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${getMatchScoreColor(job.match_percentage)}`}>
-                            <div className="flex items-center gap-2">
-                              {getMatchScoreIcon(job.match_percentage)}
-                              {job.match_percentage}% Match
-                            </div>
-                          </span>
+                          
                         </div>
                         <p className="text-lg font-medium text-slate-700 mb-1">{job.organization_name}</p>
                         <p className="text-slate-600">{job.functionalrolename} • {job.numberofopenings} openings</p>
@@ -1438,7 +1446,7 @@ const FilterChips: React.FC<{
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 mb-4">Try searching for:</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {['Data Analysis', 'Python', 'SQL', 'Machine Learning', 'React', 'JavaScript'].map((suggestion) => (
+                  {suggestions.slice(0, 6).map((suggestion) => (
                     <button
                       key={suggestion}
                       onClick={() => addSkill(suggestion)}
@@ -1447,6 +1455,12 @@ const FilterChips: React.FC<{
                       {suggestion}
                     </button>
                   ))}
+                  {suggestionsLoading && (
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Loading suggestions...</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

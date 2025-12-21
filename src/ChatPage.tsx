@@ -504,7 +504,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
           metadata: {
             messageType: 'course_recommendations',
             courses: data.recommendations,
-            suggestions: ['Find more courses', 'Show skill gap analysis', 'Search specific skills']
+            suggestions: []
           }
         });
       } else {
@@ -671,7 +671,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
             metadata: {
               messageType: 'job_results',
               jobs: data.jobs,
-              suggestions: ['Show more jobs', 'Refine my search', 'Add more skills', 'Search by location']
+              suggestions: []
             }
           });
 
@@ -689,7 +689,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
             metadata: {
               messageType: 'recommendations',
               recommendations: data.recommendations,
-              suggestions: ['Update my CV', 'Tell me about skill gaps', 'Find training courses']
+              suggestions: []
             }
           });
         }
@@ -701,7 +701,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
           metadata: { 
             messageType: 'text',
             uploadStatus: 'error',
-            suggestions: ['Try a different file', 'Build profile manually', 'Get help with CV format']
+            suggestions: []
           }
         });
         setChatPhase('profile_building');
@@ -714,7 +714,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
         metadata: { 
           messageType: 'text',
           uploadStatus: 'error',
-          suggestions: ['Try again', 'Build profile manually', 'Contact support']
+          suggestions: []
         }
       });
       setChatPhase('profile_building');
@@ -812,7 +812,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                 <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                 
                 {/* Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
+                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
+                 !message.content.includes('No jobs are available') && (
                   <div className="flex flex-wrap gap-2 pt-2">
                     {message.metadata.suggestions.map((suggestion, idx) => (
                       <button
@@ -1021,7 +1022,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                 </div>
 
                 {/* Action Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
+                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
+                 !message.content.includes('No jobs are available') && (
                   <div className="flex flex-wrap gap-2 pt-2">
                     {message.metadata.suggestions.map((suggestion, idx) => (
                       <button
@@ -1053,7 +1055,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                 </div>
 
                 {/* Action Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
+                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
+                 !message.content.includes('No jobs are available') && (
                   <div className="flex flex-wrap gap-2 pt-2">
                     {message.metadata.suggestions.map((suggestion, idx) => (
                       <button
@@ -1117,7 +1120,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                 </div>
 
                 {/* Action Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && (
+                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
+                 !message.content.includes('No jobs are available') && (
                   <div className="flex flex-wrap gap-2 pt-2">
                     {message.metadata.suggestions.map((suggestion, idx) => (
                       <button
