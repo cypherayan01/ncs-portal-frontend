@@ -1373,7 +1373,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
             {/* Enhanced Status Bar */}
             <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
               <div className="flex items-center gap-4">
-                <span>Supported: PDF, DOC, DOCX, PNG, JPG • Max 10MB</span>
+                <span>Supported: PDF• Max 10MB</span>
                 
                 
               </div>
@@ -1393,54 +1393,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
               </div>
             </div>
 
-            {/* Quick Actions for CV Mode */}
-            {cvProcessed && userProfile && (
-              <div className="mt-3 pt-3 border-t border-slate-200">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleSuggestionClick('Show more jobs')}
-                    className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-indigo-200 flex items-center gap-1"
-                  >
-                    <Briefcase className="h-3 w-3" />
-                    More Jobs
-                  </button>
-                  
-                  <button
-                    onClick={() => handleSuggestionClick('Analyze skill gaps')}
-                    className="bg-amber-50 hover:bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-amber-200 flex items-center gap-1"
-                  >
-                    <TrendingUp className="h-3 w-3" />
-                    Skill Gaps
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      if (userProfile?.skills) {
-                        // Get last job results from messages
-                        const lastJobMessage = messages.find(m => m.metadata?.messageType === 'job_results');
-                        if (lastJobMessage?.metadata?.jobs) {
-                          handleCourseRecommendation(lastJobMessage.metadata.jobs, userProfile.skills);
-                        } else {
-                          handleSuggestionClick('Recommend courses for my skills');
-                        }
-                      }
-                    }}
-                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-emerald-200 flex items-center gap-1"
-                  >
-                    <BookOpen className="h-3 w-3" />
-                    Get Courses
-                  </button>
-                  
-                  <button
-                    onClick={() => handleSuggestionClick('Search by location')}
-                    className="bg-purple-50 hover:bg-purple-100 text-purple-600 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-purple-200 flex items-center gap-1"
-                  >
-                    <MapPin className="h-3 w-3" />
-                    Location
-                  </button>
-                </div>
-              </div>
-            )}
+            
           </div>
         </div>
       </div>

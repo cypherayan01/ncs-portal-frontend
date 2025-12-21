@@ -25,7 +25,8 @@ import {
   Smile,
   Trophy,
   Lightbulb,
-  PlusCircle
+  PlusCircle,
+  Info
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ToggleSwitch from './ToggleSwitch';
@@ -52,6 +53,7 @@ interface EnhancedJob {
   title: string;
   organization_name: string;
   match_percentage: number;
+  match_reason?: string;
   score: number;
   statename: string;
   districtname: string;
@@ -870,8 +872,20 @@ const EnhancedApp: React.FC = () => {
                             </div>
                           </div>
                         </div>
+                        {job.match_reason && (
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-xl mb-6">
+                            <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-blue-600" />
+                              Why This Match?
+                            </h4>
+                            <p className="text-slate-700 text-sm leading-relaxed">{job.match_reason}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* Match Reason Box */}
+                    
 
                     <div className="bg-white/60 p-6 rounded-xl mb-6">
                       <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -886,6 +900,16 @@ const EnhancedApp: React.FC = () => {
                         <div className="flex items-center gap-2">
                           {getMatchScoreIcon(job.match_percentage)}
                           <span className="font-bold">Match Score: {Math.round(job.match_percentage)}%</span>
+                          {job.match_reason && (
+                            <div className="relative group ml-1">
+                              <Info className="h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
+                              <div className="absolute bottom-full left-0 mb-2 w-72 bg-slate-800 text-white text-sm rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 shadow-lg">
+                                <div className="font-medium mb-1">Why this match?</div>
+                                <div className="text-slate-200">{job.match_reason}</div>
+                                <div className="absolute top-full left-4 w-2 h-2 bg-slate-800 rotate-45 transform -mt-1"></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-3">

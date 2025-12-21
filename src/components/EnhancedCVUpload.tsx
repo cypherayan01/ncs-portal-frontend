@@ -128,6 +128,8 @@ const EnhancedCVUpload: React.FC<EnhancedCVUploadProps> = ({ apiUrl, onJobsUpdat
 
       const data: UploadResponse = await response.json();
       console.log('Enhanced upload response:', data);
+
+      
       
       setUploadResult(data);
       onJobsUpdate(data.matches || []);
