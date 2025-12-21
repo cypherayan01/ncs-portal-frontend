@@ -19,10 +19,13 @@ import {
   BookOpen,
   Users,
   GraduationCap,
+  MessageCircle,
+  ArrowLeft,
   Copy,
   Share2
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from "react-router-dom";
 import Header from './Header';
 import VoiceInputButton from './components/VoiceInputButton';
 
@@ -1204,6 +1207,64 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
         </div>
       </header> */}
       <Header />
+      <div className="max-w-4xl mx-auto px-2">
+        <nav className="text-sm text-slate-600 mb-2" aria-label="Breadcrumb">
+          <ol className="list-reset flex">
+            <li><Link to="/" className="text-indigo-600 hover:underline">
+                Home
+                </Link></li>
+              <li><span className="mx-2">/</span></li>
+              <li>AI Career Assistant</li>
+          </ol>
+        </nav>
+      </div>
+      <div>
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {onBackToHome && (
+                <button
+                  onClick={onBackToHome}
+                  className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  title="Back to Home"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-2 rounded-xl">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-800">AI Career Assistant</h1>
+                <p className="text-sm text-slate-600">
+                  {cvProcessed ? 'CV analyzed - finding perfect matches' : 'Find your perfect job match through conversation'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {userProfile && (
+                <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-2 rounded-full text-sm font-medium">
+                  <Check className="h-4 w-4" />
+                  {cvProcessed ? 'CV Processed' : 'Profile Ready'}
+                </div>
+              )}
+              
+              {userProfile?.confidence_score && (
+                <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-full text-sm font-medium">
+                  <TrendingUp className="h-4 w-4" />
+                  {(userProfile.confidence_score * 100).toFixed(0)}% Quality
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-2 rounded-full text-sm font-medium">
+                <MessageCircle className="h-4 w-4" />
+                {messages.length - 1} messages
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Chat Container */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/40 overflow-hidden">
