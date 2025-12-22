@@ -397,8 +397,6 @@ const JobModal: React.FC<JobModalProps> = ({ job, isOpen, onClose }) => {
 
 const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
   const apiUrl = import.meta.env.VITE_SEARCH_JOBS_URL;
-  const bhasiniApiKey = import.meta.env.VITE_BHASINI_API_KEY;
-  const bhasiniUserId = import.meta.env.VITE_BHASINI_USER_ID;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -413,23 +411,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  // Handle voice input from the new VoiceInputButton component
-  const handleVoiceTranscript = (text: string, metadata?: {
-    originalText?: string;
-    translatedText?: string;
-    detectedLanguage?: string;
-    isTranslated?: boolean;
-  }) => {
+  // Handle voice input from the VoiceInputButton component
+  const handleVoiceTranscript = (text: string) => {
     setInputValue(text);
-    
-    // If we have translation metadata, we could show it to the user
-    if (metadata && metadata.isTranslated) {
-      console.log('Voice input processed:', {
-        original: metadata.originalText,
-        translated: metadata.translatedText,
-        language: metadata.detectedLanguage
-      });
-    }
   };
 
   // Scroll to bottom when new messages arrive
@@ -1276,14 +1260,10 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   </div>
                 )}
               </div>
-              {/* Enhanced Voice Input Button with Bhasini API */}
+              {/* Voice Input Button */}
               <VoiceInputButton
                 onTranscript={handleVoiceTranscript}
                 disabled={isLoading}
-                bhasiniApiKey={bhasiniApiKey}
-                bhasiniUserId={bhasiniUserId}
-                showLanguageSelector={true}
-                defaultLanguage="hi"
               />
 
               <button
