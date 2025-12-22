@@ -923,7 +923,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {job.aveexp} years exp
+                          {job.aveexp !== null && job.aveexp !== undefined
+                            ? `${Math.round(job.aveexp)} years exp`
+                            : 'Any'}
                         </span>
                         <span className="flex items-center gap-1">
                           <IndianRupee className="h-3 w-3" />

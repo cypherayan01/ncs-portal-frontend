@@ -84,16 +84,16 @@ const EnhancedCVUpload: React.FC<EnhancedCVUploadProps> = ({ apiUrl, onJobsUpdat
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      const validTypes = ['.pdf', '.doc', '.docx', '.png', '.jpg', '.jpeg'];
+      
+      const validTypes = ['.pdf'];
       const fileExtension = '.' + file.name.toLowerCase().split('.').pop();
       
       if (!validTypes.includes(fileExtension)) {
-        setError('Please upload a valid CV file (PDF, DOC, DOCX, PNG, JPG)');
+        setError('Please upload a valid CV file (Coumputer readable PDF format only)');
         return;
       }
       
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) { 
         setError('File size must be less than 10MB');
         return;
       }
@@ -202,10 +202,13 @@ const EnhancedCVUpload: React.FC<EnhancedCVUploadProps> = ({ apiUrl, onJobsUpdat
               <input
                 type="file"
                 onChange={handleFileSelect}
-                accept=".pdf,.doc,.docx,.jpg,.png,.jpeg"
+                accept=".pdf"
                 className="block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer cursor-pointer"
                 disabled={uploading}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                *Only PDF files are supported
+              </p>
             </div>
             
             {selectedFile && (

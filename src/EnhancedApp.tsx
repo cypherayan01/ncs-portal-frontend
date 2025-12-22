@@ -34,6 +34,7 @@ import ChatPage from './ChatPage';
 import Header from './Header';
 import JobFilters from './components/JobFilters';
 import { useSearchSuggestions } from './hooks/useSearchSuggestions';
+import DOMPurify from "dompurify";
 
 // Course recommendation interface
 interface CourseRecommendation {
@@ -694,7 +695,7 @@ const EnhancedApp: React.FC = () => {
         {/* Jobs List */}
         <div className="space-y-6">
           {filteredJobs.map((job) => (
-            <div key={job.ncspjobid} className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-white/20">
+            <div key={job.ncspjobid} className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 relative">
               {/* Job Header */}
               <div className="p-8">
                 <div className="flex items-start justify-between mb-6">
@@ -724,6 +725,25 @@ const EnhancedApp: React.FC = () => {
                       <div className="text-xs opacity-90">MATCH</div>
                     </div>
                   </div>
+                  {job.match_reason && (
+  <div className="relative group ml-1">
+    <Info className="h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
+
+    <div className="absolute bottom-full right-0 mb-2 w-72
+                    bg-slate-800 text-white text-sm rounded-lg p-3
+                    opacity-0 group-hover:opacity-100
+                    transition-opacity duration-300
+                    pointer-events-none z-[9999] shadow-lg">
+
+              <div className="font-medium mb-1">Why this match?</div>
+              <div className="text-slate-200">{job.match_reason}</div>
+              <div className="absolute top-full right-4
+                              w-2 h-2 bg-slate-800
+                              rotate-45 -mt-1" />
+            </div>
+          </div>
+        )}
+                          
                 </div>
 
                 {/* Quick Info Grid */}
@@ -872,15 +892,7 @@ const EnhancedApp: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        {job.match_reason && (
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 rounded-xl mb-6">
-                            <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                              <Lightbulb className="h-4 w-4 text-blue-600" />
-                              Why This Match?
-                            </h4>
-                            <p className="text-slate-700 text-sm leading-relaxed">{job.match_reason}</p>
-                          </div>
-                        )}
+                        
                       </div>
                     </div>
 
@@ -892,7 +904,13 @@ const EnhancedApp: React.FC = () => {
                         <FileText className="h-5 w-5 text-purple-500" />
                         Job Description
                       </h4>
-                      <p className="text-slate-700 leading-relaxed">{job.description}</p>
+                      {/* <p className="text-slate-700 leading-relaxed">{job.description}</p> */}
+                      <div
+                        className="prose prose-slate max-w-none"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(job.description),
+                        }}
+                      />
                     </div>
 
                     <div className="flex items-center justify-between pt-6 border-t border-slate-200">
