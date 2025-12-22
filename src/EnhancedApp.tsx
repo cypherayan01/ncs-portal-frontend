@@ -1057,7 +1057,7 @@ const EnhancedApp: React.FC = () => {
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4">No Jobs Found</h3>
               <p className="text-slate-600 text-lg mb-6">
-                We couldn't find any jobs matching "${selectedSkills.join(', ')}". Try adjusting your search terms or explore different skills.
+                We couldn't find any jobs matching "{selectedSkills.join(', ')}". Try adjusting your search terms or explore different skills.
               </p>
                 <div className="space-y-4">
                   <p className="text-sm text-slate-500 mb-4">Try searching for:</p>

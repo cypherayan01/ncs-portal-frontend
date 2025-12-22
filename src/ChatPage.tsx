@@ -442,11 +442,11 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
     const welcomeMessage: Message = {
       id: 'welcome',
       type: 'bot',
-      content: "👋 Hi! I'm your AI career assistant. I'll help you find the perfect job match. You can either upload your CV for instant profile analysis or chat with me to build your profile step by step. What would you prefer?",
+      content: "👋 Hi! I'm your AI-powered job search assistant. I can help you find jobs in three ways:\n\n🎯Skills: 'I'm a Python developer'\n📍 Location: 'Jobs in Mumbai'\n🎯📍 Both: 'Python jobs in Delhi'\n\nI use advanced AI to understand your needs naturally - no rigid patterns! Just tell me what you're looking for and I'll have an intelligent conversation with you.\n\nWhat would you like to search for?",
       timestamp: new Date(),
       metadata: { 
         messageType: 'text',
-        suggestions: ['Upload my CV', 'Build profile through chat']
+        suggestions: ["I'm a Python developer", "Jobs in Bangalore", "Data entry jobs in Mumbai"]
       }
     };
     setMessages([welcomeMessage]);
@@ -545,20 +545,16 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
     setIsLoading(true);
 
     try {
-      // Choose endpoint based on whether we have CV data
-      const endpoint = cvProcessed && userProfile ? '/chat_with_cv' : '/chat';
+      // Use the new AI-powered chat endpoint
+      const endpoint = '/ai-chat';
       
       const requestBody: any = {
         message: userMessage,
         chat_phase: chatPhase,
+        user_id: `frontend_user_${Date.now()}`, // Generate a unique user ID
         user_profile: userProfile,
         conversation_history: messages.slice(-10)
       };
-
-      // Add CV profile data if available
-      if (cvProcessed && userProfile) {
-        requestBody.cv_profile_data = userProfile;
-      }
 
       const response = await fetch(`${apiUrl}${endpoint}`, {
         method: 'POST',
@@ -567,16 +563,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
       });
 
       const data = await response.json();
-      console.log("Chat response data:", data);
+      console.log("AI Chat response data:", data);
+      
       // Add bot response
       addMessage({
         type: 'bot',
         content: data.response,
         metadata: {
           messageType: data.message_type || 'text',
-          jobs: data.jobs,
+          jobs: data.jobs || [],
           profileData: data.profile_data,
-          suggestions: data.suggestions
+          suggestions: data.suggestions || []
         }
       });
 
@@ -589,7 +586,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
       }
 
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('AI Chat error:', error);
       addMessage({
         type: 'bot',
         content: "Sorry, I encountered an error. Please try again or check if the backend server is running.",
@@ -726,42 +723,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    // Handle special suggestions differently
-    if (suggestion === 'Upload my CV') {
-      triggerFileUpload();
-      return;
-    }
-    
-    if (suggestion === 'Build profile through chat') {
-      // Set up for conversational profile building
-      setChatPhase('profile_building');
-      setInputValue('');
-      
-      addMessage({
-        type: 'user',
-        content: 'Build profile through chat',
-        metadata: { messageType: 'text' }
-      });
-
-      addMessage({
-        type: 'bot',
-        content: "Great! I'll help you build your profile step by step. Let's start with your skills. What technologies, programming languages, or job skills do you have? For example: 'I know Python, JavaScript, and SQL' or 'I have experience in data entry and customer service'.",
-        metadata: { 
-          messageType: 'text',
-          suggestions: ['I know Python and JavaScript', 'I have data entry skills', 'I am a graphic designer', 'I work in customer service']
-        }
-      });
-      return;
-    }
-    
-    // For other suggestions, use the default behavior
-    setInputValue(suggestion);
-    // Auto-send the suggestion
-    setTimeout(() => {
-      handleSendMessage();
-    }, 100);
-  };
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
@@ -814,27 +775,21 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
               <div className="space-y-3">
                 <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                 
-                {/* Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
-                 !message.content.includes('No jobs are available') && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {message.metadata.suggestions.map((suggestion, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors border ${
-                          suggestion === 'Upload my CV' 
-                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200'
-                            : suggestion === 'Build profile through chat'
-                            ? 'bg-purple-50 hover:bg-purple-100 text-purple-600 border-purple-200'
-                            : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200'
-                        }`}
-                      >
-                        {suggestion === 'Upload my CV' && '📄 '}
-                        {suggestion === 'Build profile through chat' && '💬 '}
-                        {suggestion}
-                      </button>
-                    ))}
+                {/* AI Suggestions */}
+                {isBot && message.metadata?.suggestions && message.metadata.suggestions.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-medium text-slate-600">💡 Quick suggestions:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {message.metadata.suggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setInputValue(suggestion)}
+                          className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium transition-colors border border-indigo-200 hover:border-indigo-300"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -957,11 +912,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
             )}
 
             {/* Enhanced Job Results */}
-            {message.metadata?.messageType === 'job_results' && message.metadata.jobs && (
+            {(message.metadata?.messageType === 'job_results' || message.metadata?.messageType === 'jobs') && message.metadata.jobs && (
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed">{message.content}</p>
-                <div className="space-y-3">
-                  {message.metadata.jobs.slice(0, 5).map((job) => (
+                {message.metadata.jobs.length > 0 ? (
+                  <div className="space-y-3">
+                    {message.metadata.jobs.slice(0, 5).map((job) => (
                     <div key={job.ncspjobid} className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 space-y-3 border border-slate-200">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -1023,20 +979,30 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                     </div>
                   )}
                 </div>
-
-                {/* Action Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
-                 !message.content.includes('No jobs are available') && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {message.metadata.suggestions.map((suggestion, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-medium transition-colors border border-indigo-200"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                ) : (
+                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                    <div className="text-center text-slate-600 mb-4">
+                      <div className="text-lg font-medium mb-2">No jobs found matching your criteria</div>
+                      <div className="text-sm">Try searching with different skills or locations</div>
+                    </div>
+                    
+                    <div className="mt-6">
+                      <h4 className="text-sm font-semibold text-slate-700 mb-3 text-center">Popular Sectors</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
+                          <div className="text-sm font-medium text-slate-800">IT & Software</div>
+                          <div className="text-xs text-slate-600 mt-1">Technology, Development</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
+                          <div className="text-sm font-medium text-slate-800">Healthcare</div>
+                          <div className="text-xs text-slate-600 mt-1">Medical, Nursing</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-slate-200 text-center">
+                          <div className="text-sm font-medium text-slate-800">Manufacturing</div>
+                          <div className="text-xs text-slate-600 mt-1">Production, Operations</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1057,21 +1023,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   </div>
                 </div>
 
-                {/* Action Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
-                 !message.content.includes('No jobs are available') && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {message.metadata.suggestions.map((suggestion, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="bg-amber-50 hover:bg-amber-100 text-amber-600 px-3 py-1 rounded-full text-sm font-medium transition-colors border border-amber-200"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
@@ -1122,21 +1073,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   ))}
                 </div>
 
-                {/* Action Suggestions */}
-                {message.metadata.suggestions && message.metadata.suggestions.length > 0 && 
-                 !message.content.includes('No jobs are available') && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {message.metadata.suggestions.map((suggestion, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="bg-green-50 hover:bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-medium transition-colors border border-green-200"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -1178,7 +1114,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
               <div>
                 <h1 className="text-xl font-bold text-slate-800">AI Career Assistant</h1>
                 <p className="text-sm text-slate-600">
-                  {cvProcessed ? 'CV analyzed - finding perfect matches' : 'Find your perfect job match through conversation'}
+                  {cvProcessed ? 'CV analyzed - AI-powered job matching active' : 'Intelligent job search with natural conversation - no rigid patterns!'}
                 </p>
               </div>
             </div>
@@ -1237,7 +1173,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
               <div>
                 <h1 className="text-xl font-bold text-slate-800">AI Career Assistant</h1>
                 <p className="text-sm text-slate-600">
-                  {cvProcessed ? 'CV analyzed - finding perfect matches' : 'Find your perfect job match through conversation'}
+                  {cvProcessed ? 'CV analyzed - AI-powered job matching active' : 'Intelligent job search with natural conversation - no rigid patterns!'}
                 </p>
               </div>
             </div>
@@ -1286,9 +1222,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
+                    
                     <span className="text-slate-600">
-                      {cvProcessed ? 'Finding job matches...' : 'AI is thinking...'}
+                      AI is analyzing your message and finding the best response...
                     </span>
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
@@ -1324,7 +1260,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onBackToHome }) => {
                   placeholder={
                     cvProcessed 
                       ? "Ask about jobs, skills, or career advice..." 
-                      : "Type your message or upload your CV..."
+                      : "Type your message ..."
                   }
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/90 backdrop-blur-sm text-slate-800 placeholder-slate-500"
                   disabled={isLoading}
